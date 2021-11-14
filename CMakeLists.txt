@@ -23,6 +23,8 @@ find_package(rclcpp_components REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(class_loader REQUIRED)
 
+find_package(OpenCV REQUIRED)
+
 FIND_LIBRARY(mmal_LIBS REQUIRED NAMES mmal PATHS /opt/vc/lib)
 FIND_LIBRARY(mmalcore_LIBS REQUIRED NAMES mmal_core PATHS /opt/vc/lib)
 FIND_LIBRARY(mmalutil_LIBS REQUIRED NAMES mmal_util PATHS /opt/vc/lib)
@@ -46,6 +48,7 @@ target_link_libraries(raspicam_common ${bcmhost_LIBS} ${vcos_LIBS} ${mmal_LIBS} 
 
 add_library(raspicam SHARED src/raspicam.cpp)
 target_link_libraries(raspicam raspicam_common)
+target_link_libraries(raspicam ${OpenCV_LIBS})
 
 # composable ros node
 add_library(RasPiCamPublisherNode SHARED src/RasPiCamPublisherNode.cpp)

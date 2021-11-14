@@ -39,6 +39,8 @@ extern "C" {
 
 #include <raspicam.h>
 
+#include <opencv2/imgcodecs.hpp>
+
 #define ROS_INFO(...) fprintf(stdout, __VA_ARGS__);
 #define ROS_DEBUG(...) fprintf(stdout, __VA_ARGS__);
 #define ROS_WARN(...) fprintf(stderr, __VA_ARGS__);
@@ -107,6 +109,10 @@ static void image_encoder_buffer_callback(MMAL_PORT_T* port, MMAL_BUFFER_HEADER_
         } else {
           mmal_buffer_header_mem_lock(buffer);
           memcpy(&(pData->buffer[pData->frame & 1].get()[pData->id]), buffer->data, buffer->length);
+          // export image for debugging
+          cv::Mat raw(1, buffer->length, CV_8UC1, (void*)buffer->data);
+          cv::Mat img = cv::imdecode(raw, cv::IMREAD_UNCHANGED);
+          cv::imwrite("/tmp/img.jpg", img);
           pData->id += bytes_written;
           mmal_buffer_header_mem_unlock(buffer);
         }

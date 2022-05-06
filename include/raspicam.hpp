@@ -30,10 +30,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 extern "C" {
 #include "interface/mmal/mmal.h"
-#include "RaspiCamControl.h"
+#include "raspicam_common/RaspiCamControl.h"
 }
 
-#include "mmal_cxx_helper.h"
+#include "mmal_cxx_helper.hpp"
 
 typedef std::function<void(const uint8_t*, const uint8_t*)> buffer_callback_t;
 

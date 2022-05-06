@@ -6,7 +6,7 @@
 #include <sensor_msgs/msg/camera_info.hpp>
 #include <sensor_msgs/srv/set_camera_info.hpp>
 
-#include <raspicam.h>
+#include <raspicam.hpp>
 #include <memory>
 
 class RasPiCamPublisher : public rclcpp::Node {

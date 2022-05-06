@@ -37,7 +37,7 @@ extern "C" {
 #include "interface/mmal/util/mmal_util_params.h"
 } // C header
 
-#include <raspicam.h>
+#include <raspicam.hpp>
 
 #define ROS_INFO(...) fprintf(stdout, __VA_ARGS__);
 #define ROS_DEBUG(...) fprintf(stdout, __VA_ARGS__);

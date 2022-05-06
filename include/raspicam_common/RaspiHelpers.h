@@ -25,23 +25,20 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef RASPIGPS_H_
-#define RASPIGPS_H_
 
-#include <pthread.h>
-#include <time.h>
+#ifndef RASPICAM_HELPERS
+#define RASPICAM_HELPERS
 
-#include "libgps_loader.h"
+void display_valid_parameters(char *name, void (*app_help)(char*));
+void get_sensor_defaults(int camera_num, char *camera_name, int *width, int *height);
+void set_app_name(const char *name);
+const char *get_app_name();
+MMAL_STATUS_T connect_ports(MMAL_PORT_T *output_port, MMAL_PORT_T *input_port, MMAL_CONNECTION_T **connection);
+void check_disable_port(MMAL_PORT_T *port);
+void default_signal_handler(int signal_number);
+int mmal_status_to_int(MMAL_STATUS_T status);
+void print_app_details(FILE *fd);
+uint64_t get_microseconds64();
+void check_camera_stack();
 
-int raspi_gps_setup(int verbose);
-void raspi_gps_shutdown(int verbose);
-
-struct gps_data_t *raspi_gps_lock();
-void raspi_gps_unlock();
-
-// Return string representation of the current fix
-// The resulting pointer is allocated so will
-// need to be freed when finished with.
-char *raspi_gps_location_string();
-
-#endif /* RASPIGPS_H_ */
+#endif

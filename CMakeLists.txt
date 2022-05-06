@@ -32,42 +32,43 @@ FIND_LIBRARY(bcmhost_LIBS REQUIRED NAMES bcm_host PATHS /opt/vc/lib)
 
 include_directories(include /opt/vc/include)
 
-add_library(raspicam_common STATIC
-    src/RaspiCamControl.c
-    src/RaspiCLI.c
-    src/RaspiPreview.c
-    src/RaspiCommonSettings.c
-    src/RaspiHelpers.c
-    src/RaspiGPS.c
-    src/libgps_loader.c
+add_library(raspicam STATIC
+    src/raspicam_common/RaspiCamControl.c
+    src/raspicam_common/RaspiCLI.c
+    src/raspicam_common/RaspiPreview.c
+    src/raspicam_common/RaspiCommonSettings.c
+    src/raspicam_common/RaspiHelpers.c
 )
-
-target_link_libraries(raspicam_common ${bcmhost_LIBS} ${vcos_LIBS} ${mmal_LIBS} ${mmalcore_LIBS} ${mmalutil_LIBS} ${mmalvcclient_LIBS})
-
-add_library(raspicam SHARED src/raspicam.cpp)
-target_link_libraries(raspicam raspicam_common)
+target_link_libraries(raspicam
+  ${bcmhost_LIBS} ${vcos_LIBS} ${mmal_LIBS} ${mmalcore_LIBS} ${mmalutil_LIBS} ${mmalvcclient_LIBS})
+target_include_directories(raspicam 
+  PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/raspicam_common
+)
 
 # composable ros node
-add_library(RasPiCamPublisherNode SHARED src/RasPiCamPublisherNode.cpp)
-ament_target_dependencies(RasPiCamPublisherNode rclcpp rclcpp_components sensor_msgs class_loader)
-target_link_libraries(RasPiCamPublisherNode raspicam)
-rclcpp_components_register_nodes(RasPiCamPublisherNode "RasPiCamPublisher")
-
-add_executable(raspicam2_node src/raspicam2_node.cpp)
-target_link_libraries(raspicam2_node RasPiCamPublisherNode)
-
-install(TARGETS
-    RasPiCamPublisherNode raspicam
-    ARCHIVE DESTINATION lib
-    LIBRARY DESTINATION lib
-    RUNTIME DESTINATION bin
+add_library(raspicam_publisher SHARED
+  src/raspicam.cpp
+  src/raspicam_publisher.cpp
+)
+target_link_libraries(raspicam_publisher
+  raspicam
+)
+ament_target_dependencies(raspicam_publisher
+  rclcpp
+  rclcpp_components
+  sensor_msgs
+  class_loader
+)
+rclcpp_components_register_node(raspicam_publisher 
+  PLUGIN "RaspicamPublisher"
+  EXECUTABLE "raspicam_node"
 )
 
 install(TARGETS
-    raspicam2_node
-    DESTINATION lib/${PROJECT_NAME}
+  raspicam_publisher
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
 )
-
-install(DIRECTORY cfg/ DESTINATION share/${PROJECT_NAME}/cfg)
 
 ament_package()

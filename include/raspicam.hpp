@@ -44,13 +44,10 @@ struct RASPIVID_STATE {
     : camera_component(nullptr)
     , splitter_component(nullptr)
     , image_encoder_component(nullptr)
-    , video_encoder_component(nullptr)
     , splitter_connection(nullptr)
     , image_encoder_connection(nullptr)
-    , video_encoder_connection(nullptr)
     , splitter_pool(nullptr, mmal::default_delete_pool)
-    , image_encoder_pool(nullptr, mmal::default_delete_pool)
-    , video_encoder_pool(nullptr, mmal::default_delete_pool){}
+    , image_encoder_pool(nullptr, mmal::default_delete_pool){}
 
   bool isInit;
   int width;      /// Requested width of image
@@ -58,7 +55,6 @@ struct RASPIVID_STATE {
   int framerate;  /// Requested frame rate (fps)
   int quality;
   bool enable_raw_pub;  // Enable Raw publishing
-  bool enable_imv_pub;  // Enable publishing of inline motion vectors
 
   int camera_id = 0;
 
@@ -67,15 +63,12 @@ struct RASPIVID_STATE {
   mmal::component_ptr camera_component;
   mmal::component_ptr splitter_component;
   mmal::component_ptr image_encoder_component;
-  mmal::component_ptr video_encoder_component;
 
   mmal::connection_ptr splitter_connection;       /// Pointer to camera => splitter
   mmal::connection_ptr image_encoder_connection;  /// Pointer to splitter => encoder
-  mmal::connection_ptr video_encoder_connection;  /// Pointer to camera => encoder
 
   mmal::pool_ptr splitter_pool;       // Pointer buffer pool used by splitter (raw) output
   mmal::pool_ptr image_encoder_pool;  // Pointer buffer pool used by encoder (jpg) output
-  mmal::pool_ptr video_encoder_pool;  // Pointer buffer pool used by encoder (h264) output
 };
 
 /**
@@ -85,86 +78,7 @@ struct RASPIVID_STATE {
  */
 void configure_parameters(RASPIVID_STATE& state);
 
-/**
- *  buffer header callback function for image encoder
- *
- *  Callback will dump buffer data to the specific file
- *
- * @param port Pointer to port from which callback originated
- * @param buffer mmal buffer header pointer
- */
-static void image_encoder_buffer_callback(MMAL_PORT_T* port, MMAL_BUFFER_HEADER_T* buffer);
-
-/**
- *  buffer header callback function for video encoder
- *
- *  Callback will dump buffer data to the specific file
- *
- * @param port Pointer to port from which callback originated
- * @param buffer mmal buffer header pointer
- */
-static void video_encoder_buffer_callback(MMAL_PORT_T* port, MMAL_BUFFER_HEADER_T* buffer);
-
-static void splitter_buffer_callback(MMAL_PORT_T* port, MMAL_BUFFER_HEADER_T* buffer);
-
-/**
- * Create the camera component, set up its ports
- *
- * @param state Pointer to state control struct
- *
- * @return 0 if failed, pointer to component if successful
- *
- */
-static MMAL_COMPONENT_T* create_camera_component(RASPIVID_STATE& state);
-
-/**
- * Create the image encoder component, set up its ports
- *
- * @param state Pointer to state control struct
- *
- * @return MMAL_SUCCESS if all OK, something else otherwise
- *
- */
-static MMAL_STATUS_T create_image_encoder_component(RASPIVID_STATE& state);
-
-/**
- * Create the video encoder component, set up its ports
- *
- * @param state Pointer to state control struct
- *
- * @return MMAL_SUCCESS if all OK, something else otherwise
- *
- */
-static MMAL_STATUS_T create_video_encoder_component(RASPIVID_STATE& state);
-
-/**
- * Create the splitter component, set up its ports
- *
- * @param state Pointer to state control struct
- *
- * @return MMAL_SUCCESS if all OK, something else otherwise
- *
- */
-static MMAL_STATUS_T create_splitter_component(RASPIVID_STATE& state);
-
-/**
- * Connect two specific ports together
- *
- * @param output_port Pointer the output port
- * @param input_port Pointer the input port
- * @param Pointer to a mmal connection pointer, reassigned if function
- * successful
- * @return Returns a MMAL_STATUS_T giving result of operation
- *
- */
-static MMAL_STATUS_T connect_ports(MMAL_PORT_T* output_port, MMAL_PORT_T* input_port,
-                                   mmal::connection_ptr& connection);
-
-/**
- * init_cam
-
- */
-int init_cam(RASPIVID_STATE& state, buffer_callback_t cb_raw = nullptr, buffer_callback_t cb_compressed = nullptr, buffer_callback_t cb_motion = nullptr);
+int init_cam(RASPIVID_STATE& state, buffer_callback_t cb_raw = nullptr, buffer_callback_t cb_compressed = nullptr);
 
 int start_capture(RASPIVID_STATE& state);
 

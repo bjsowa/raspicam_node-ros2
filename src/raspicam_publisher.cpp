@@ -1,7 +1,7 @@
 #include <raspicam_publisher.hpp>
 
 RaspicamPublisher::RaspicamPublisher(rclcpp::NodeOptions options)
-: Node("Raspicam_publisher", "", options.use_intra_process_comms(true))
+: Node("raspicam_node", "", options.use_intra_process_comms(true))
 {
   state = std::make_shared<RASPIVID_STATE>();
 

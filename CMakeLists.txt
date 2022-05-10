@@ -27,7 +27,6 @@ FIND_LIBRARY(mmal_LIBS REQUIRED NAMES mmal PATHS /opt/vc/lib)
 FIND_LIBRARY(mmalcore_LIBS REQUIRED NAMES mmal_core PATHS /opt/vc/lib)
 FIND_LIBRARY(mmalutil_LIBS REQUIRED NAMES mmal_util PATHS /opt/vc/lib)
 FIND_LIBRARY(mmalvcclient_LIBS REQUIRED NAMES mmal_vc_client PATHS /opt/vc/lib)
-FIND_LIBRARY(vcos_LIBS REQUIRED NAMES vcos PATHS /opt/vc/lib)
 FIND_LIBRARY(bcmhost_LIBS REQUIRED NAMES bcm_host PATHS /opt/vc/lib)
 
 include_directories(include /opt/vc/include)
@@ -40,7 +39,7 @@ add_library(raspicam STATIC
     src/raspicam_common/RaspiHelpers.c
 )
 target_link_libraries(raspicam
-  ${bcmhost_LIBS} ${vcos_LIBS} ${mmal_LIBS} ${mmalcore_LIBS} ${mmalutil_LIBS} ${mmalvcclient_LIBS})
+  ${bcmhost_LIBS} ${mmal_LIBS} ${mmalcore_LIBS} ${mmalutil_LIBS} ${mmalvcclient_LIBS})
 target_include_directories(raspicam 
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include/raspicam_common

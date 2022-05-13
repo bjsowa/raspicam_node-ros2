@@ -35,21 +35,25 @@ extern "C" {
 
 #include "mmal_cxx_helper.hpp"
 
-typedef std::function<void(const uint8_t*, const uint8_t*)> buffer_callback_t;
+typedef std::function<void (const uint8_t *, const uint8_t *)> buffer_callback_t;
 
 /** Structure containing all state information for the current run
  */
-struct RASPIVID_STATE {
+struct RASPIVID_STATE
+{
   RASPIVID_STATE()
-    : camera_component(nullptr)
+  : camera_component(nullptr)
     , splitter_component(nullptr)
     , image_encoder_component(nullptr)
     , splitter_connection(nullptr)
     , image_encoder_connection(nullptr)
     , splitter_pool(nullptr, mmal::default_delete_pool)
-    , image_encoder_pool(nullptr, mmal::default_delete_pool){}
+    , image_encoder_pool(nullptr, mmal::default_delete_pool)
+  {
+    raspicamcontrol_set_defaults(&camera_parameters);
+  }
 
-  bool isInit;
+  bool isInit = false;
   int width;      /// Requested width of image
   int height;     /// requested height of image
   int framerate;  /// Requested frame rate (fps)
@@ -71,15 +75,10 @@ struct RASPIVID_STATE {
   mmal::pool_ptr image_encoder_pool;  // Pointer buffer pool used by encoder (jpg) output
 };
 
-/**
- * Assign a default set of parameters to the state passed in
- *
- * @param state state structure to assign defaults to
- */
-void configure_parameters(RASPIVID_STATE& state);
+int init_cam(
+  RASPIVID_STATE & state, buffer_callback_t cb_raw = nullptr,
+  buffer_callback_t cb_compressed = nullptr);
 
-int init_cam(RASPIVID_STATE& state, buffer_callback_t cb_raw = nullptr, buffer_callback_t cb_compressed = nullptr);
+int start_capture(RASPIVID_STATE & state);
 
-int start_capture(RASPIVID_STATE& state);
-
-int close_cam(RASPIVID_STATE& state);
+int close_cam(RASPIVID_STATE & state);

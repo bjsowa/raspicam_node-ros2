@@ -5,8 +5,6 @@ RaspicamPublisher::RaspicamPublisher(rclcpp::NodeOptions options)
 {
   state = std::make_shared<RASPIVID_STATE>();
 
-  configure_parameters(*state);
-
   //declare all parameters
   declare_parameter("width");
   declare_parameter("height");

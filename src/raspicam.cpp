@@ -76,19 +76,6 @@ typedef struct MMAL_PORT_USERDATA_T
 int skip_frames = 0;
 
 /**
- * Assign a default set of parameters to the state passed in
- *
- * @param state state structure to assign defaults to
- */
-void configure_parameters(RASPIVID_STATE & state)
-{
-  // Set up the camera_parameters to default
-  raspicamcontrol_set_defaults(&state.camera_parameters);
-
-  state.isInit = false;
-}
-
-/**
  *  buffer header callback function for image encoder
  *
  *  Callback will dump buffer data to the specific file

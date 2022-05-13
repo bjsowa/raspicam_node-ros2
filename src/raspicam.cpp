@@ -393,7 +393,7 @@ static MMAL_COMPONENT_T * create_camera_component(RASPIVID_STATE & state)
 
   state.camera_component.reset(camera);
 
-  ROS_DEBUG("Camera component done\n");
+  ROS_DEBUG("Camera component done");
 
   return camera;
 
@@ -500,7 +500,7 @@ static MMAL_STATUS_T create_image_encoder_component(RASPIVID_STATE & state)
     });
   state.image_encoder_component.reset(encoder);
 
-  ROS_DEBUG("Image encoder component done\n");
+  ROS_DEBUG("Image encoder component done");
 
   return status;
 
@@ -650,7 +650,7 @@ static MMAL_STATUS_T create_splitter_component(RASPIVID_STATE & state)
 
   state.splitter_component.reset(splitter);
 
-  ROS_DEBUG("splitter component done\n");
+  ROS_DEBUG("splitter component done");
 
   return status;
 
@@ -799,7 +799,7 @@ int start_capture(RASPIVID_STATE & state)
   MMAL_PORT_T * image_encoder_output_port = state.image_encoder_component->output[0];
   MMAL_PORT_T * splitter_output_raw = state.splitter_component->output[1];
   ROS_INFO(
-    "Starting video capture (%d, %d, %d, %d)\n", state.width, state.height, state.quality,
+    "Starting video capture (%d, %d, %d, %d)", state.width, state.height, state.quality,
     state.framerate);
 
   if (mmal_port_parameter_set_boolean(
@@ -840,7 +840,7 @@ int start_capture(RASPIVID_STATE & state)
       }
     }
   }
-  ROS_INFO("Video capture started\n");
+  ROS_INFO("Video capture started");
   return 0;
 }
 
@@ -882,7 +882,7 @@ int close_cam(RASPIVID_STATE & state)
     if (camera) {
       state.camera_component.reset(nullptr);
     }
-    ROS_INFO("Video capture stopped\n");
+    ROS_INFO("Video capture stopped");
     return 0;
   } else {
     return 1;

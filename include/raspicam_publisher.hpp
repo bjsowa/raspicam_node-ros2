@@ -23,10 +23,12 @@ private:
 
   RASPIVID_STATE state;
 
-  OnSetParametersCallbackHandle::SharedPtr callback_handle;
+  OnSetParametersCallbackHandle::SharedPtr set_parameter_callback_handle;
 
+  void declareIntParameter(
+    std::string name, int& current_value, int min_value, int max_value,
+    std::string description = "");
   void declareParameters();
-  void updateParameters();
   rcl_interfaces::msg::SetParametersResult onSetParameter(
     const std::vector<rclcpp::Parameter> & parameters);
   void onImageRaw(const uint8_t * start, const uint8_t * end);

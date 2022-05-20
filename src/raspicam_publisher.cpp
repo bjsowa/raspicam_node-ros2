@@ -37,7 +37,8 @@ RaspicamPublisher::~RaspicamPublisher()
 }
 
 void RaspicamPublisher::declareIntParameter(
-  std::string name, int & current_value, int min_value, int max_value, std::string description)
+  const std::string & name, int & current_value, int min_value, int max_value,
+  std::string description)
 {
   rcl_interfaces::msg::ParameterDescriptor descriptor;
   descriptor.description = std::move(description);
@@ -54,7 +55,7 @@ void RaspicamPublisher::declareIntParameter(
 }
 
 void RaspicamPublisher::declareFloatParameter(
-  std::string name, double & current_value, double min_value, double max_value,
+  const std::string & name, double & current_value, double min_value, double max_value,
   std::string description)
 {
   rcl_interfaces::msg::ParameterDescriptor descriptor;
@@ -69,6 +70,36 @@ void RaspicamPublisher::declareFloatParameter(
 
   declare_parameter(name, current_value, descriptor);
   get_parameter(name, current_value);
+}
+
+void RaspicamPublisher::declareFloatParameter(
+  const std::string & name, float & current_value, double min_value, double max_value,
+  std::string description)
+{
+  rcl_interfaces::msg::ParameterDescriptor descriptor;
+  descriptor.description = std::move(description);
+
+  rcl_interfaces::msg::FloatingPointRange range;
+  range.from_value = min_value;
+  range.to_value = max_value;
+  range.step = 0.0;
+
+  descriptor.floating_point_range.emplace_back(std::move(range));
+
+  declare_parameter(name, static_cast<double>(current_value), descriptor);
+  get_parameter(name, current_value);
+}
+
+void RaspicamPublisher::declareBoolParameter(
+  const std::string & name, int & current_value, std::string description)
+{
+  rcl_interfaces::msg::ParameterDescriptor descriptor;
+  descriptor.description = std::move(description);
+
+  bool value = current_value != 0;
+  declare_parameter(name, value, descriptor);
+  get_parameter(name, value);
+  current_value = value ? 1 : 0;
 }
 
 void RaspicamPublisher::declareParameters()
@@ -103,11 +134,26 @@ void RaspicamPublisher::declareParameters()
   declareIntParameter(
     "exposure_compensation", state.camera_parameters.exposureCompensation, -10, 10,
     "Exposure compensation");
+  declareIntParameter(
+    "rotation", state.camera_parameters.rotation, 0, 359,
+    "Image rotation (in degrees)");
 
   declareFloatParameter("roi.x", state.camera_parameters.roi.x, 0.0, 1.0);
   declareFloatParameter("roi.y", state.camera_parameters.roi.y, 0.0, 1.0);
   declareFloatParameter("roi.w", state.camera_parameters.roi.w, 0.0, 1.0);
   declareFloatParameter("roi.h", state.camera_parameters.roi.h, 0.0, 1.0);
+  declareFloatParameter("analog_gain", state.camera_parameters.analog_gain, 0.0, 15.0);
+  declareFloatParameter("digital_gain", state.camera_parameters.analog_gain, 0.0, 64.0);
+
+  declareBoolParameter(
+    "video_stabilization", state.camera_parameters.videoStabilisation,
+    "Video stabilization");
+  declareBoolParameter(
+    "hflip", state.camera_parameters.hflip,
+    "Flip image horizontally");
+  declareBoolParameter(
+    "vflip", state.camera_parameters.vflip,
+    "Flip image vertically");
 }
 
 rcl_interfaces::msg::SetParametersResult RaspicamPublisher::onSetParameter(
@@ -154,6 +200,11 @@ rcl_interfaces::msg::SetParametersResult RaspicamPublisher::onSetParameter(
         return result;
       }
       state.camera_parameters.exposureCompensation = parameter.as_int();
+    } else if (name == "rotation") {
+      if (raspicamcontrol_set_rotation(state.camera_component.get(), parameter.as_int()) != 0) {
+        return result;
+      }
+      state.camera_parameters.rotation = -parameter.as_int();
     } else if (name == "roi.x") {
       roi.x = parameter.as_double();
       roi_changed = true;
@@ -166,6 +217,46 @@ rcl_interfaces::msg::SetParametersResult RaspicamPublisher::onSetParameter(
     } else if (name == "roi.h") {
       roi.h = parameter.as_double();
       roi_changed = true;
+    } else if (name == "analog_gain") {
+      if (raspicamcontrol_set_gains(
+          state.camera_component.get(), parameter.as_double(),
+          state.camera_parameters.digital_gain) != 0)
+      {
+        return result;
+      }
+      state.camera_parameters.analog_gain = parameter.as_double();
+    } else if (name == "digital_gain") {
+      if (raspicamcontrol_set_gains(
+          state.camera_component.get(), state.camera_parameters.analog_gain,
+          parameter.as_double()) != 0)
+      {
+        return result;
+      }
+      state.camera_parameters.digital_gain = parameter.as_double();
+    } else if (name == "video_stabilization") {
+      if (raspicamcontrol_set_video_stabilisation(
+          state.camera_component.get(),
+          parameter.as_bool() ? 1 : 0) != 0)
+      {
+        return result;
+      }
+      state.camera_parameters.videoStabilisation = parameter.as_bool() ? 1 : 0;
+    } else if (name == "hflip") {
+      if (raspicamcontrol_set_flips(
+          state.camera_component.get(), parameter.as_bool() ? 1 : 0,
+          state.camera_parameters.vflip) != 0)
+      {
+        return result;
+      }
+      state.camera_parameters.hflip = parameter.as_bool() ? 1 : 0;
+    } else if (name == "vflip") {
+      if (raspicamcontrol_set_flips(
+          state.camera_component.get(), state.camera_parameters.hflip,
+          parameter.as_bool() ? 1 : 0) != 0)
+      {
+        return result;
+      }
+      state.camera_parameters.vflip = parameter.as_bool() ? 1 : 0;
     }
 
     if (roi_changed) {

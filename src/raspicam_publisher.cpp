@@ -53,6 +53,24 @@ void RaspicamPublisher::declareIntParameter(
   get_parameter(name, current_value);
 }
 
+void RaspicamPublisher::declareFloatParameter(
+  std::string name, double & current_value, double min_value, double max_value,
+  std::string description)
+{
+  rcl_interfaces::msg::ParameterDescriptor descriptor;
+  descriptor.description = std::move(description);
+
+  rcl_interfaces::msg::FloatingPointRange range;
+  range.from_value = min_value;
+  range.to_value = max_value;
+  range.step = 0.0;
+
+  descriptor.floating_point_range.emplace_back(std::move(range));
+
+  declare_parameter(name, current_value, descriptor);
+  get_parameter(name, current_value);
+}
+
 void RaspicamPublisher::declareParameters()
 {
   // Read-only parameters
@@ -80,13 +98,16 @@ void RaspicamPublisher::declareParameters()
     "brightness", state.camera_parameters.brightness, 0, 100, "Image brightness");
   declareIntParameter(
     "saturation", state.camera_parameters.saturation, -100, 100, "Image saturation");
-  RCLCPP_INFO(get_logger(), "%d", state.camera_parameters.ISO);
   declareIntParameter(
     "ISO", state.camera_parameters.ISO, 0, 1600, "Capture ISO");
   declareIntParameter(
     "exposure_compensation", state.camera_parameters.exposureCompensation, -10, 10,
     "Exposure compensation");
 
+  declareFloatParameter("roi.x", state.camera_parameters.roi.x, 0.0, 1.0);
+  declareFloatParameter("roi.y", state.camera_parameters.roi.y, 0.0, 1.0);
+  declareFloatParameter("roi.w", state.camera_parameters.roi.w, 0.0, 1.0);
+  declareFloatParameter("roi.h", state.camera_parameters.roi.h, 0.0, 1.0);
 }
 
 rcl_interfaces::msg::SetParametersResult RaspicamPublisher::onSetParameter(
@@ -98,33 +119,60 @@ rcl_interfaces::msg::SetParametersResult RaspicamPublisher::onSetParameter(
   for (const auto & parameter : parameters) {
     RCLCPP_INFO_STREAM(get_logger(), "Set parameter: " << parameter.get_name());
     std::string name = parameter.get_name();
+    auto roi = state.camera_parameters.roi;
+    bool roi_changed = false;
+
     if (name == "sharpness") {
       if (raspicamcontrol_set_sharpness(state.camera_component.get(), parameter.as_int()) != 0) {
         return result;
       }
+      state.camera_parameters.sharpness = parameter.as_int();
     } else if (name == "contrast") {
       if (raspicamcontrol_set_contrast(state.camera_component.get(), parameter.as_int()) != 0) {
         return result;
       }
+      state.camera_parameters.contrast = parameter.as_int();
     } else if (name == "brightness") {
       if (raspicamcontrol_set_brightness(state.camera_component.get(), parameter.as_int()) != 0) {
         return result;
       }
+      state.camera_parameters.brightness = parameter.as_int();
     } else if (name == "saturation") {
       if (raspicamcontrol_set_saturation(state.camera_component.get(), parameter.as_int()) != 0) {
         return result;
       }
+      state.camera_parameters.saturation = parameter.as_int();
     } else if (name == "ISO") {
       if (raspicamcontrol_set_ISO(state.camera_component.get(), parameter.as_int()) != 0) {
         return result;
       }
+      state.camera_parameters.ISO = parameter.as_int();
     } else if (name == "exposure_compensation") {
       if (raspicamcontrol_set_exposure_compensation(
-          state.camera_component.get(),
-          parameter.as_int()) != 0)
+          state.camera_component.get(), parameter.as_int()) != 0)
       {
         return result;
       }
+      state.camera_parameters.exposureCompensation = parameter.as_int();
+    } else if (name == "roi.x") {
+      roi.x = parameter.as_double();
+      roi_changed = true;
+    } else if (name == "roi.y") {
+      roi.y = parameter.as_double();
+      roi_changed = true;
+    } else if (name == "roi.w") {
+      roi.w = parameter.as_double();
+      roi_changed = true;
+    } else if (name == "roi.h") {
+      roi.h = parameter.as_double();
+      roi_changed = true;
+    }
+
+    if (roi_changed) {
+      if (raspicamcontrol_set_ROI(state.camera_component.get(), roi) != 0) {
+        return result;
+      }
+      state.camera_parameters.roi = roi;
     }
   }
 
